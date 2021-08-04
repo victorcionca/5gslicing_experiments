@@ -1,0 +1,167 @@
+version: '3.3'
+
+services:
+  mongodb:
+    build: database
+    image: open5gs-mongodb
+    networks:
+      - fivegcorenet
+    container_name: open5gs-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb:/data/db
+
+  core:
+    build: core
+    image: open5gs-core
+    networks:
+      - fivegcorenet
+    depends_on:
+      - mongodb
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+    devices:
+      - "/dev/net/tun:/dev/net/tun"
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+    volumes:
+      - type: bind
+        source: /sys/kernel/debug
+        target: /sys/kernel/debug
+    hostname: open5gs-run
+    cpus: 1 #${CPU_PERCENT}
+    cpuset: "1"
+    #command: /bin/bash
+    command: /bin/bash -c "sh /root/setup.sh ; sh /root/setup_core.sh ; sh /root/start_core.sh ; /root/perf_server `ps x | grep ${TEST_NF} | grep -v grep | awk '{print $$1}'`"
+    #command: /bin/bash -c "getent hosts mongodb ; sleep 10 ; sh /root/setup_core.sh ; open5gs-smfd -D; open5gs-amfd -D; open5gs-ausfd -D; open5gs-nrfd -D; open5gs-pcfd -D; open5gs-pcrfd -D; open5gs-udmd -D; open5gs-udrd -D; open5gs-upfd"
+
+  ueransim:
+    build: ueransim
+    image: ueransim
+    depends_on:
+      - core
+    networks:
+      - fivegcorenet
+    ports:
+      - "33333"
+    volumes:
+      - type: bind
+        source: /home/victor.cionca/work/vmware/UERANSIM
+        target: /root/5gcore/UERANSIM
+        # - type: bind
+        # - source: /home/victor/5gcore/experiments/${EXP_NAME}
+        # - target: /root/ueransim_exp
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    cpuset: "0"
+    #command: /bin/bash
+    # Options for nr-ue:
+    # -n number of UEs  (default 1)
+    # -f UE registration rate per second (default 1)
+    command: /bin/bash -c "sleep 5 ; sh /root/setup_amf_ip.sh ; /root/5gcore/UERANSIM/build/nr-gnb -c /root/5gcore/UERANSIM/config/open5gs-gnb.yaml & sleep 5 ; /root/5gcore/UERANSIM/build/nr-ue -c /root/5gcore/UERANSIM/config/open5gs-ue.yaml -n ${NUM_UES} -p /root/5gcore/UERANSIM/ -a ${UE_RATE}"
+    #command: /bin/bash -c "sleep 25 ; sh /root/setup.sh; /root/UERANSIM/build/nr-gnb -c /root/UERANSIM/config/open5gs-gnb.yaml & /root/UERANSIM/build/nr-ue -n 100 -f ${UE_RATE} -c /root/UERANSIM/config/open5gs-ue.yaml"
+
+  ueransim2:
+    build: ueransim
+    image: ueransim
+    depends_on:
+      - core
+    networks:
+      - fivegcorenet
+    ports:
+      - "33333"
+    volumes:
+      - type: bind
+        source: /home/victor.cionca/work/vmware/UERANSIM
+        target: /root/5gcore/UERANSIM
+        # - type: bind
+        # - source: /home/victor/5gcore/experiments/${EXP_NAME}
+        # - target: /root/ueransim_exp
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    cpuset: "2"
+    #command: /bin/bash
+    # Options for nr-ue:
+    # -n number of UEs  (default 1)
+    # -f UE registration rate per second (default 1)
+    command: /bin/bash -c "sleep 5 ; sh /root/setup_amf_ip.sh ; /root/5gcore/UERANSIM/build/nr-gnb -c /root/5gcore/UERANSIM/config/open5gs-gnb2.yaml & sleep 5 ; /root/5gcore/UERANSIM/build/nr-ue -c /root/5gcore/UERANSIM/config/open5gs-ue.yaml -i 901700000000026 -n ${NUM_UES} -p /root/5gcore/UERANSIM/ -a ${UE_RATE}"
+    #command: /bin/bash -c "sleep 25 ; sh /root/setup.sh; /root/UERANSIM/build/nr-gnb -c /root/UERANSIM/config/open5gs-gnb.yaml & /root/UERANSIM/build/nr-ue -n 100 -f ${UE_RATE} -c /root/UERANSIM/config/open5gs-ue.yaml"
+
+  ueransim3:
+    build: ueransim
+    image: ueransim
+    depends_on:
+      - core
+    networks:
+      - fivegcorenet
+    ports:
+      - "33333"
+    volumes:
+      - type: bind
+        source: /home/victor.cionca/work/vmware/UERANSIM
+        target: /root/5gcore/UERANSIM
+        # - type: bind
+        # - source: /home/victor/5gcore/experiments/${EXP_NAME}
+        # - target: /root/ueransim_exp
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    cpuset: "3"
+    #command: /bin/bash
+    # Options for nr-ue:
+    # -n number of UEs  (default 1)
+    # -f UE registration rate per second (default 1)
+    command: /bin/bash -c "sleep 5 ; sh /root/setup_amf_ip.sh ; /root/5gcore/UERANSIM/build/nr-gnb -c /root/5gcore/UERANSIM/config/open5gs-gnb3.yaml & sleep 5 ; /root/5gcore/UERANSIM/build/nr-ue -c /root/5gcore/UERANSIM/config/open5gs-ue.yaml -i 901700000000051 -n ${NUM_UES} -p /root/5gcore/UERANSIM/ -a ${UE_RATE}"
+    #command: /bin/bash -c "sleep 25 ; sh /root/setup.sh; /root/UERANSIM/build/nr-gnb -c /root/UERANSIM/config/open5gs-gnb.yaml & /root/UERANSIM/build/nr-ue -n 100 -f ${UE_RATE} -c /root/UERANSIM/config/open5gs-ue.yaml"
+
+  ueransim4:
+    build: ueransim
+    image: ueransim
+    depends_on:
+      - core
+    networks:
+      - fivegcorenet
+    ports:
+      - "33333"
+    volumes:
+      - type: bind
+        source: /home/victor.cionca/work/vmware/UERANSIM
+        target: /root/5gcore/UERANSIM
+        # - type: bind
+        # - source: /home/victor/5gcore/experiments/${EXP_NAME}
+        # - target: /root/ueransim_exp
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    cpuset: "3"
+    #command: /bin/bash
+    # Options for nr-ue:
+    # -n number of UEs  (default 1)
+    # -f UE registration rate per second (default 1)
+    command: /bin/bash -c "sleep 5 ; sh /root/setup_amf_ip.sh ; /root/5gcore/UERANSIM/build/nr-gnb -c /root/5gcore/UERANSIM/config/open5gs-gnb4.yaml & sleep 5 ; /root/5gcore/UERANSIM/build/nr-ue -c /root/5gcore/UERANSIM/config/open5gs-ue.yaml -i 901700000000076 -n ${NUM_UES} -p /root/5gcore/UERANSIM/ -a ${UE_RATE}"
+    #command: /bin/bash -c "sleep 25 ; sh /root/setup.sh; /root/UERANSIM/build/nr-gnb -c /root/UERANSIM/config/open5gs-gnb.yaml & /root/UERANSIM/build/nr-ue -n 100 -f ${UE_RATE} -c /root/UERANSIM/config/open5gs-ue.yaml"
+
+  echoserver:
+    image: hashicorp/http-echo
+    networks:
+      - fivegcorenet
+    hostname: echoserver
+
+  appserver:
+    build: app_server
+    networks:
+      - fivegcorenet
+    hostname: appserver
+    command: /bin/bash
+
+volumes:
+  mongodb: {}
+  home: {}
+
+networks:
+    fivegcorenet:
+        name: fivegcorenet
