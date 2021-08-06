@@ -155,6 +155,9 @@ services:
     build: app_server
     networks:
       - fivegcorenet
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
     hostname: appserver
     command: /bin/bash
 
