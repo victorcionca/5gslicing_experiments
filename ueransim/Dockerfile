@@ -25,4 +25,4 @@ RUN DEBIAN_FRONTENT=noninteractive \
 #    make
 RUN mkdir /root/ueransim_exp/
 RUN mkdir -p /root/5gcore/UERANSIM/
-COPY setup_amf_ip.sh /root/
+COPY setup.sh /root/
