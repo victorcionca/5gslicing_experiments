@@ -12,7 +12,7 @@ services:
     volumes:
       - mongodb:/data/db
 
-  core:
+  core01:
     build: core
     image: open5gs-core
     networks:
@@ -30,18 +30,52 @@ services:
       - type: bind
         source: /sys/kernel/debug
         target: /sys/kernel/debug
+      - type: bind
+        source: /home/victor/work/vmware/testbed/core_config_slice_01
+        target: /usr/local/etc/open5gs
+      - type: bind
+        source: /home/victor/work/vmware/open5gs
+        target: /root/5gcore/open5gs
     hostname: open5gs-run
     cpus: 1 #${CPU_PERCENT}
     cpuset: "1"
     #command: /bin/bash
     command: /bin/bash -c "sh /root/setup.sh ; sh /root/setup_core.sh ; sh /root/start_core.sh ; /root/perf_server `ps x | grep ${TEST_NF} | grep -v grep | awk '{print $$1}'`"
-    #command: /bin/bash -c "getent hosts mongodb ; sleep 10 ; sh /root/setup_core.sh ; open5gs-smfd -D; open5gs-amfd -D; open5gs-ausfd -D; open5gs-nrfd -D; open5gs-pcfd -D; open5gs-pcrfd -D; open5gs-udmd -D; open5gs-udrd -D; open5gs-upfd"
+
+  core10:
+    build: core
+    image: open5gs-core
+    networks:
+      - fivegcorenet
+    depends_on:
+      - mongodb
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+    devices:
+      - "/dev/net/tun:/dev/net/tun"
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+    volumes:
+      - type: bind
+        source: /sys/kernel/debug
+        target: /sys/kernel/debug
+      - type: bind
+        source: /home/victor/work/vmware/testbed/core_config_slice_10
+        target: /usr/local/etc/open5gs
+      - type: bind
+        source: /home/victor/work/vmware/open5gs
+        target: /root/5gcore/open5gs
+    hostname: open5gs-run
+    cpus: 1 #${CPU_PERCENT}
+    cpuset: "1"
+    #command: /bin/bash
+    command: /bin/bash -c "sh /root/setup.sh ; sh /root/setup_core.sh ; sh /root/start_core.sh ; /root/perf_server `ps x | grep ${TEST_NF} | grep -v grep | awk '{print $$1}'`"
+
 
   ueransim:
     build: ueransim
     image: ueransim
-    depends_on:
-      - core
     networks:
       - fivegcorenet
     ports:
@@ -67,8 +101,6 @@ services:
   ueransim2:
     build: ueransim
     image: ueransim
-    depends_on:
-      - core
     networks:
       - fivegcorenet
     ports:
@@ -94,8 +126,6 @@ services:
   ueransim3:
     build: ueransim
     image: ueransim
-    depends_on:
-      - core
     networks:
       - fivegcorenet
     ports:
@@ -121,8 +151,6 @@ services:
   ueransim4:
     build: ueransim
     image: ueransim
-    depends_on:
-      - core
     networks:
       - fivegcorenet
     ports:
@@ -167,4 +195,8 @@ volumes:
 
 networks:
     fivegcorenet:
+        driver: bridge
         name: fivegcorenet
+        ipam:
+            config:
+                - subnet: 172.21.0.0/16
